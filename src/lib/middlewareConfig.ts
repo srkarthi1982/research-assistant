@@ -22,7 +22,7 @@ interface MiddlewareConfig {
 export const middlewareConfig: MiddlewareConfig = {
   routeProtection: {
     mode: "protectMost",
-    publicRoutes: new Set(["/", "/login", "/register", "/forgot-password", "/reset", "/reset-password"]),
+    publicRoutes: new Set(["/", "/app", "/login", "/register", "/forgot-password", "/reset", "/reset-password"]),
     protectedPrefixes: ["/app"],
     apiBypassRoutes: new Set([]),
   },

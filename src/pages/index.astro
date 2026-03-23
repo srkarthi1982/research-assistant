@@ -6,9 +6,7 @@ import { buildRootRedirect } from "../lib/redirects";
 
 const rootAppUrl = Astro.locals.rootAppUrl ?? "https://ansiversa.com";
 const appUrl = new URL("/app", Astro.url).toString();
-const startHref = Astro.locals.isAuthenticated
-  ? "/app"
-  : buildRootRedirect(rootAppUrl, "/login", appUrl);
+const startHref = "/app";
 const signInHref = buildRootRedirect(rootAppUrl, "/login", appUrl);
 
 const title = `${APP_META.name} | Ansiversa`;
@@ -17,15 +15,15 @@ const description = APP_META.description;
 const valueCards = [
   {
     "title": "Clarity first",
-    "description": "The experience is being structured to reduce friction, explain the core task clearly, and help users move forward with confidence."
+    "description": "The workspace is built to help questions, notes, and conclusions stay clear instead of scattering across tabs and docs."
   },
   {
     "title": "Built for progress",
-    "description": "The baseline favors steady learning rhythm over clutter, so future study workflows can feel lightweight and intentional."
+    "description": "The workflow keeps one topic in focus so it is easier to think, organize, and return to the work without losing context."
   },
   {
     "title": "Ready for real study flows",
-    "description": "The shared shell, auth boundary, and route contracts are already aligned so app-specific learning features can be added without rework."
+    "description": "Research Assistant follows current Ansiversa standards, giving the product a stable base for deeper research features later."
   }
 ];
 const reasonsToUse = [
@@ -35,11 +33,11 @@ const reasonsToUse = [
   },
   {
     "title": "Shared Ansiversa standards",
-    "description": "The landing page, protected workspace, navbar, footer, and parent-auth routing already follow the current ecosystem baseline."
+    "description": "The landing page, app shell, live preview, navbar, and footer all follow the current ecosystem baseline."
   },
   {
     "title": "Ready for the next implementation phase",
-    "description": "Research Assistant is already aligned to the current Ansiversa app contract, so the next build phase can stay focused on real product work."
+    "description": "Research Assistant now ships with a structured V1 note workflow and a stable base for future research tooling."
   }
 ];
 ---
@@ -52,9 +50,9 @@ const reasonsToUse = [
           <div class="av-auth-stack-md">
             <div class="av-auth-stack-xs">
               <p class="av-kicker">Learning Mini-App</p>
-              <h1 class="av-section-title">Research Assistant is being prepared to make learning feel clear, calm, and usable</h1>
+              <h1 class="av-section-title">Organize your research. Think clearly.</h1>
               <p class="av-text-soft">
-                Summaries, citations, and structured notes. Built for clarity, progress, and focused understanding, Research Assistant is taking shape as a focused Ansiversa experience with a calm interface, clear direction, and room for the real workflow to grow well.
+                Research Assistant gives you a calm workspace for capturing questions, insights, references, and conclusions in one structured research flow with live preview.
               </p>
             </div>
 
@@ -64,7 +62,7 @@ const reasonsToUse = [
             </div>
 
             <p class="av-text-soft">
-              Coming soon in Learning. The shared shell, route structure, and parent-auth flow are already in place.
+              Live now as a focused V1 research workspace, with the core editor and summary flow available directly in the app.
             </p>
           </div>
         </AvCard>
@@ -86,7 +84,7 @@ const reasonsToUse = [
               Research Assistant is a focused learning tool inside Ansiversa. Its first release is being shaped around one clear job: Summaries, citations, and structured notes.
             </p>
             <p class="av-text-soft">
-              The repo already follows Ansiversa layout, auth, metadata, and route standards, so the next build phase can stay tightly scoped to the actual product workflow.
+              The repo already follows Ansiversa layout, metadata, and route standards, so future work can stay tightly scoped to the actual product workflow.
             </p>
           </AvCard>
 
@@ -115,15 +113,15 @@ const reasonsToUse = [
         <AvCard className="av-auth-card">
           <div class="av-auth-stack-md">
             <div class="av-auth-stack-xs">
-              <p class="av-kicker">Build in progress</p>
-              <h2 class="av-section-title">The premium baseline is locked. The domain workflow is next.</h2>
+              <p class="av-kicker">Available now</p>
+              <h2 class="av-section-title">The V1 research workflow is live and ready to use.</h2>
               <p class="av-text-soft">
-                Research Assistant already uses the shared Ansiversa shell and route conventions, so future implementation can move directly into the real product flow without another structural reset.
+                Open the app to organize one research topic clearly, keep the current draft in local storage, and copy a clean structured summary whenever you need it.
               </p>
             </div>
 
             <div class="av-row-wrap">
-              <AvButton href={startHref}>Enter protected workspace</AvButton>
+              <AvButton href={startHref}>Open Research Assistant</AvButton>
               <AvButton href={signInHref} variant="ghost">Return through Ansiversa</AvButton>
             </div>
           </div>
