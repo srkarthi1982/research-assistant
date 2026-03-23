@@ -1,92 +1,133 @@
 ---
+import { AvButton, AvCard, AvContainer } from "@ansiversa/components";
 import AppShell from "../layouts/AppShell.astro";
-import { AvContainer, AvButton } from "@ansiversa/components";
+import { APP_META } from "../app.meta";
+import { buildRootRedirect } from "../lib/redirects";
 
-const title = "Research Assistant – Ansiversa";
-const description = "Summaries, citations, and structured notes.";
+const rootAppUrl = Astro.locals.rootAppUrl ?? "https://ansiversa.com";
+const appUrl = new URL("/app", Astro.url).toString();
+const startHref = Astro.locals.isAuthenticated
+  ? "/app"
+  : buildRootRedirect(rootAppUrl, "/login", appUrl);
+const signInHref = buildRootRedirect(rootAppUrl, "/login", appUrl);
+
+const title = `${APP_META.name} | Ansiversa`;
+const description = APP_META.description;
+
+const valueCards = [
+  {
+    "title": "Clarity first",
+    "description": "The experience is being structured to reduce friction, explain the core task clearly, and help users move forward with confidence."
+  },
+  {
+    "title": "Built for progress",
+    "description": "The baseline favors steady learning rhythm over clutter, so future study workflows can feel lightweight and intentional."
+  },
+  {
+    "title": "Ready for real study flows",
+    "description": "The shared shell, auth boundary, and route contracts are already aligned so app-specific learning features can be added without rework."
+  }
+];
+const reasonsToUse = [
+  {
+    "title": "One clear job",
+    "description": "Research Assistant stays anchored to a single purpose so the future product can remain focused instead of sprawling."
+  },
+  {
+    "title": "Shared Ansiversa standards",
+    "description": "The landing page, protected workspace, navbar, footer, and parent-auth routing already follow the current ecosystem baseline."
+  },
+  {
+    "title": "Ready for the next implementation phase",
+    "description": "Research Assistant is already aligned to the current Ansiversa app contract, so the next build phase can stay focused on real product work."
+  }
+];
 ---
 
 <AppShell title={title} description={description}>
-  <!-- Hero -->
-  <section class="av-hero">
-    <AvContainer size="narrow" className="av-hero__content--narrow">
-      <div class="av-hero__content">
-        <div class="av-kicker">
-          <span>Learning · Ansiversa Mini App</span>
+  <section class="av-section">
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-card">
+          <div class="av-auth-stack-md">
+            <div class="av-auth-stack-xs">
+              <p class="av-kicker">Learning Mini-App</p>
+              <h1 class="av-section-title">Research Assistant is being prepared to make learning feel clear, calm, and usable</h1>
+              <p class="av-text-soft">
+                Summaries, citations, and structured notes. Built for clarity, progress, and focused understanding, Research Assistant is taking shape as a focused Ansiversa experience with a calm interface, clear direction, and room for the real workflow to grow well.
+              </p>
+            </div>
+
+            <div class="av-row-wrap">
+              <AvButton href={startHref}>Open Research Assistant</AvButton>
+              <AvButton href={signInHref} variant="ghost">Sign in</AvButton>
+            </div>
+
+            <p class="av-text-soft">
+              Coming soon in Learning. The shared shell, route structure, and parent-auth flow are already in place.
+            </p>
+          </div>
+        </AvCard>
+
+        <div class="grid gap-4 md:grid-cols-3">
+          {valueCards.map((card) => (
+            <AvCard variant="soft" className="av-auth-stack-sm">
+              <h2 class="av-card-heading">{card.title}</h2>
+              <p class="av-text-soft">{card.description}</p>
+            </AvCard>
+          ))}
         </div>
-        <h1 class="av-gradient-text">Research Assistant</h1>
-        <p>
-          Summaries, citations, and structured notes.
-        </p>
-      </div>
-      <div class="av-cta-row">
-        <AvButton href="https://research-assistant.ansiversa.com">Launch Research</AvButton>
-      </div>
-    </AvContainer>
-  </section>
 
-  <!-- Problem -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">The problem it solves</h2>
-        <p class="av-section-lead">
-          Learning tools are scattered across tabs, apps, and messy notes.
-        </p>
-      </div>
-      <div class="av-section-body space-y-3 text-slate-300">
-        <p>Research Assistant focuses on one part of your learning flow and keeps it clear.</p>
-      </div>
-    </AvContainer>
-  </section>
+        <div class="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+          <AvCard variant="soft" className="av-auth-stack-sm">
+            <p class="av-kicker">What this app will do</p>
+            <h2 class="av-card-heading">Research Assistant</h2>
+            <p class="av-text-soft">
+              Research Assistant is a focused learning tool inside Ansiversa. Its first release is being shaped around one clear job: Summaries, citations, and structured notes.
+            </p>
+            <p class="av-text-soft">
+              The repo already follows Ansiversa layout, auth, metadata, and route standards, so the next build phase can stay tightly scoped to the actual product workflow.
+            </p>
+          </AvCard>
 
-  <!-- Why this mini app -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">Why Research Assistant feels different</h2>
-        <p class="av-section-lead">
-          A focused mini app inside the larger Ansiversa ecosystem.
-        </p>
-      </div>
-      <div class="av-section-body">
-        <ul class="space-y-2 text-slate-300 list-disc list-inside">
-          <li>Designed specifically for learners, students, and educators.</li>
-          <li>Removes distractions so you can focus on actual understanding.</li>
-          <li>Built on the fast, unified Ansiversa ecosystem.</li>
-        </ul>
-      </div>
-    </AvContainer>
-  </section>
+          <AvCard className="av-auth-card">
+            <div class="av-auth-stack-sm">
+              <p class="av-kicker">Category fit</p>
+              <h2 class="av-card-heading">Learning</h2>
+              <p class="av-text-soft">
+                Research Assistant is being positioned with a clarity, progress, and focused understanding tone so it feels consistent with the
+                rest of the Ansiversa ecosystem from the first load.
+              </p>
+            </div>
+          </AvCard>
+        </div>
 
-  <!-- How it works -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">How it works</h2>
-        <p class="av-section-lead">
-          Simple, clear steps so people can start in under a minute.
-        </p>
-      </div>
-      <ol class="av-section-body space-y-2 text-slate-300 list-decimal list-inside">
-        <li>Open Research Assistant in your browser.</li>
-        <li>Add the topic, content, or material you want to work with.</li>
-        <li>Use the focused tools to learn, revise, or practice within minutes.</li>
-      </ol>
-    </AvContainer>
-  </section>
+        <div class="grid gap-4 md:grid-cols-3">
+          {reasonsToUse.map((reason) => (
+            <AvCard variant="soft" className="av-auth-stack-sm">
+              <p class="av-kicker">Why use it</p>
+              <h2 class="av-card-heading">{reason.title}</h2>
+              <p class="av-text-soft">{reason.description}</p>
+            </AvCard>
+          ))}
+        </div>
 
-  <!-- Final CTA -->
-  <section class="av-section">
-    <AvContainer size="narrow">
-      <div class="av-section-header">
-        <h2 class="av-section-title">Ready to try Research Assistant?</h2>
-        <p class="av-section-lead">
-          Open the app, follow the simple flow, and let it handle the heavy lifting.
-        </p>
-      </div>
-      <div class="av-cta-row">
-        <AvButton href="https://research-assistant.ansiversa.com">Start with Research</AvButton>
+        <AvCard className="av-auth-card">
+          <div class="av-auth-stack-md">
+            <div class="av-auth-stack-xs">
+              <p class="av-kicker">Build in progress</p>
+              <h2 class="av-section-title">The premium baseline is locked. The domain workflow is next.</h2>
+              <p class="av-text-soft">
+                Research Assistant already uses the shared Ansiversa shell and route conventions, so future implementation can move directly into the real product flow without another structural reset.
+              </p>
+            </div>
+
+            <div class="av-row-wrap">
+              <AvButton href={startHref}>Enter protected workspace</AvButton>
+              <AvButton href={signInHref} variant="ghost">Return through Ansiversa</AvButton>
+            </div>
+          </div>
+        </AvCard>
       </div>
     </AvContainer>
   </section>
