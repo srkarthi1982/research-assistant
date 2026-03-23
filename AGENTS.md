@@ -25,6 +25,7 @@ MANDATORY: After completing each task, update this repo’s AGENTS.md Task Log (
 - Review this repo's existing AGENTS.md Task Log history before making changes.
 
 ## Task Log (Recent)
+- 2026-03-23 research-assistant V1 section toggle fix: replaced optional preview section `x-show` blocks with conditional rendering so References / Sources and Conclusions sections now hide and show correctly without leaving layout gaps; revalidated with npm run typecheck and npm run build; browser-style recheck confirmed working toggles, clean copy output, local draft retention intact, reset confirmation intact, and no mobile overflow regression.
 - 2026-03-23 research-assistant V1 implementation started: built a public `/app` research workspace with Alpine-managed draft state, local browser draft persistence, structured section editors for topic, key questions, notes, references, and conclusions, optional section toggles for references and conclusions, live research summary preview, copy-ready output, reset confirmation, and refined landing CTA/pathing; validated with npm install, npm run typecheck, npm run build.
 - 2026-03-23 Seeded from latest app-starter V2 baseline: synced shared starter structure (APP_META, public /, protected /app, middleware/auth/session/dev files, layouts, docs, and integration checklist), aligned `@ansiversa/components` to `^0.0.169`, replaced the legacy landing with a premium category-aligned coming-soon homepage, and validated with npm install, npm run typecheck, npm run build.
 - Keep newest first; include date and short summary.

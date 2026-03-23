@@ -179,21 +179,25 @@ const description = "Organize your research. Think clearly.";
                   <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('notes')"></p>
                 </section>
 
-                <section class="research-document-section" x-show="$store.researchApp.draft.showReferences">
-                  <div class="research-document-section-header">
-                    <h2>References / Sources</h2>
-                    <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('references')">Copy</button>
-                  </div>
-                  <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('references')"></p>
-                </section>
+                <template x-if="$store.researchApp.draft.showReferences">
+                  <section class="research-document-section">
+                    <div class="research-document-section-header">
+                      <h2>References / Sources</h2>
+                      <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('references')">Copy</button>
+                    </div>
+                    <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('references')"></p>
+                  </section>
+                </template>
 
-                <section class="research-document-section" x-show="$store.researchApp.draft.showConclusions">
-                  <div class="research-document-section-header">
-                    <h2>Conclusions</h2>
-                    <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('conclusions')">Copy</button>
-                  </div>
-                  <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('conclusions')"></p>
-                </section>
+                <template x-if="$store.researchApp.draft.showConclusions">
+                  <section class="research-document-section">
+                    <div class="research-document-section-header">
+                      <h2>Conclusions</h2>
+                      <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('conclusions')">Copy</button>
+                    </div>
+                    <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('conclusions')"></p>
+                  </section>
+                </template>
               </div>
             </div>
           </AvCard>
