@@ -1,204 +1,148 @@
 ---
-import { AvButton, AvCard, AvCheckbox, AvContainer, AvInput, AvTextarea } from "@ansiversa/components";
+import { and, db, desc, eq, ResearchProjects } from "astro:db";
+import { AvButton, AvCard, AvContainer, AvInput, AvTextarea } from "@ansiversa/components";
 import AppShell from "../../layouts/AppShell.astro";
 import { APP_META } from "../../app.meta";
+import { createId, getProjectSummary } from "../../lib/research";
 
-const title = `${APP_META.name} | Organize your research`;
-const description = "Organize your research. Think clearly.";
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect("/login");
+}
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const intent = String(formData.get("intent") ?? "");
+
+  if (intent === "create-project") {
+    const title = String(formData.get("title") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim();
+    const subject = String(formData.get("subject") ?? "").trim();
+
+    if (title) {
+      const now = new Date();
+      await db.insert(ResearchProjects).values({
+        id: createId(),
+        userId: user.id,
+        title,
+        description: description || null,
+        subject: subject || null,
+        status: "active",
+        createdAt: now,
+        updatedAt: now,
+        archivedAt: null,
+      });
+    }
+  }
+
+  if (intent === "archive-project") {
+    const projectId = String(formData.get("projectId") ?? "");
+    if (projectId) {
+      const now = new Date();
+      await db
+        .update(ResearchProjects)
+        .set({ status: "archived", archivedAt: now, updatedAt: now })
+        .where(and(eq(ResearchProjects.id, projectId), eq(ResearchProjects.userId, user.id)));
+    }
+  }
+
+  if (intent === "restore-project") {
+    const projectId = String(formData.get("projectId") ?? "");
+    if (projectId) {
+      await db
+        .update(ResearchProjects)
+        .set({ status: "active", archivedAt: null, updatedAt: new Date() })
+        .where(and(eq(ResearchProjects.id, projectId), eq(ResearchProjects.userId, user.id)));
+    }
+  }
+
+  return Astro.redirect("/app");
+}
+
+const projects = await db
+  .select()
+  .from(ResearchProjects)
+  .where(eq(ResearchProjects.userId, user.id))
+  .orderBy(desc(ResearchProjects.updatedAt));
+
+const activeProjects = projects.filter((project) => project.status === "active");
+const archivedProjects = projects.filter((project) => project.status === "archived");
+
+const summary = await getProjectSummary(user.id);
+
+const title = `${APP_META.name} | Research Workspace`;
 ---
 
-<AppShell title={title} description={description}>
+<AppShell title={title} description="Structured research workspace.">
   <section class="av-section">
     <AvContainer>
-      <div class="research-app-shell av-auth-stack-lg" x-data x-init="$store.researchApp.init()">
-        <div class="research-app-hero av-auth-stack-sm">
-          <p class="av-kicker">Learning Mini-App</p>
-          <h1 class="av-section-title">Organize your research. Think clearly.</h1>
-          <p class="av-text-soft research-app-hero-copy">
-            Capture the current topic, frame the right questions, keep notes structured, and turn scattered thinking into a calm, readable research summary.
-          </p>
-        </div>
-
-        <div class="research-app-grid">
-          <div class="research-app-editor-stack av-auth-stack-md">
-            <AvCard className="av-auth-card research-app-card">
-              <div class="av-auth-stack-md">
-                <div class="av-auth-stack-xs">
-                  <p class="av-kicker">Research setup</p>
-                  <h2 class="av-card-heading">Current topic</h2>
-                  <p class="av-text-soft">
-                    Keep the workspace centered around one topic at a time. The current draft is retained locally in this browser for V1.
-                  </p>
-                </div>
-
-                <AvInput
-                  id="research-topic"
-                  label="Topic / research title"
-                  name="research-topic"
-                  placeholder="Renewable energy incentives in the UAE"
-                  x-model="$store.researchApp.draft.topic"
-                  x-on:input="$store.researchApp.updateField('topic', $event.target.value)"
-                />
-              </div>
-            </AvCard>
-
-            <AvCard className="av-auth-card research-app-card">
-              <div class="av-auth-stack-md">
-                <div class="av-auth-stack-xs">
-                  <p class="av-kicker">Core sections</p>
-                  <h2 class="av-card-heading">Questions and notes</h2>
-                </div>
-
-                <div class="av-auth-stack-sm">
-                  <AvTextarea
-                    label="Key Questions"
-                    name="research-key-questions"
-                    rows={5}
-                    placeholder="What are the main questions this research should answer?"
-                    x-model="$store.researchApp.draft.keyQuestions"
-                    x-on:input="$store.researchApp.updateField('keyQuestions', $event.target.value)"
-                  />
-
-                  <AvTextarea
-                    label="Notes / Insights"
-                    name="research-notes"
-                    rows={7}
-                    placeholder="Capture observations, findings, and useful patterns as the research develops."
-                    x-model="$store.researchApp.draft.notes"
-                    x-on:input="$store.researchApp.updateField('notes', $event.target.value)"
-                  />
-                </div>
-              </div>
-            </AvCard>
-
-            <AvCard variant="soft" className="research-app-card">
-              <div class="av-auth-stack-sm">
-                <div class="av-auth-stack-xs">
-                  <p class="av-kicker">Optional sections</p>
-                  <h2 class="av-card-heading">Show only the sections you need</h2>
-                </div>
-
-                <div class="research-app-toggle-grid">
-                  <AvCheckbox
-                    label="References / Sources"
-                    name="show-references"
-                    x-model="$store.researchApp.draft.showReferences"
-                    x-on:change="$store.researchApp.updateToggle('showReferences', $event.target.checked)"
-                  />
-                  <AvCheckbox
-                    label="Conclusions"
-                    name="show-conclusions"
-                    x-model="$store.researchApp.draft.showConclusions"
-                    x-on:change="$store.researchApp.updateToggle('showConclusions', $event.target.checked)"
-                  />
-                </div>
-
-                <div class="av-auth-stack-sm">
-                  <AvTextarea
-                    label="References / Sources"
-                    name="research-references"
-                    rows={5}
-                    placeholder="Add sources, links, citations, or reference notes here."
-                    x-model="$store.researchApp.draft.references"
-                    x-on:input="$store.researchApp.updateField('references', $event.target.value)"
-                  />
-
-                  <AvTextarea
-                    label="Conclusions"
-                    name="research-conclusions"
-                    rows={5}
-                    placeholder="Write the current takeaway, decision, or conclusion from the research."
-                    x-model="$store.researchApp.draft.conclusions"
-                    x-on:input="$store.researchApp.updateField('conclusions', $event.target.value)"
-                  />
-                </div>
-              </div>
-            </AvCard>
-
-            <AvCard className="av-auth-card research-app-card">
-              <div class="av-auth-stack-sm">
-                <div class="av-auth-stack-xs">
-                  <p class="av-kicker">Actions</p>
-                  <h2 class="av-card-heading">Copy or reset with intention</h2>
-                </div>
-
-                <div class="av-row-wrap">
-                  <AvButton type="button" x-on:click="$store.researchApp.copyFullResearch()">Copy full research summary</AvButton>
-                  <AvButton type="button" variant="ghost" x-on:click="$store.researchApp.requestReset()">Reset research</AvButton>
-                </div>
-
-                <p class="research-app-inline-note" x-show="$store.researchApp.copyMessage" x-text="$store.researchApp.copyMessage"></p>
-                <p class="research-app-error" x-show="$store.researchApp.copyError" x-text="$store.researchApp.copyError"></p>
-
-                <template x-if="$store.researchApp.showResetConfirmation">
-                  <div class="research-app-reset-card">
-                    <p class="av-text-soft">
-                      Clear the current research draft and local browser copy? This removes the current V1 draft from local storage.
-                    </p>
-                    <div class="av-row-wrap">
-                      <AvButton type="button" x-on:click="$store.researchApp.confirmReset()">Confirm reset</AvButton>
-                      <AvButton type="button" variant="ghost" x-on:click="$store.researchApp.cancelReset()">Cancel</AvButton>
-                    </div>
-                  </div>
-                </template>
-              </div>
-            </AvCard>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-card">
+          <div class="av-auth-stack-sm">
+            <p class="av-kicker">Overview</p>
+            <h1 class="av-section-title">Research workspace</h1>
+            <div class="grid gap-3 md:grid-cols-5">
+              <div><strong>{summary.totalProjects}</strong><p class="av-text-soft">Total projects</p></div>
+              <div><strong>{summary.activeProjects}</strong><p class="av-text-soft">Active</p></div>
+              <div><strong>{summary.archivedProjects}</strong><p class="av-text-soft">Archived</p></div>
+              <div><strong>{summary.totalNotes}</strong><p class="av-text-soft">Notes</p></div>
+              <div><strong>{summary.importantNotes}</strong><p class="av-text-soft">Important</p></div>
+            </div>
           </div>
+        </AvCard>
 
-          <AvCard className="av-auth-card research-app-card research-preview-card">
-            <div class="av-auth-stack-md">
-              <div class="research-preview-header">
-                <div class="av-auth-stack-xs">
-                  <p class="av-kicker">Live preview</p>
-                  <h2 class="av-card-heading">Research summary</h2>
-                </div>
-                <AvButton type="button" variant="ghost" x-on:click="$store.researchApp.copyFullResearch()">Copy full research summary</AvButton>
-              </div>
+        <AvCard className="av-auth-card">
+          <form method="post" class="av-auth-stack-sm">
+            <input type="hidden" name="intent" value="create-project" />
+            <p class="av-kicker">Projects</p>
+            <h2 class="av-card-heading">Create research project</h2>
+            <AvInput name="title" label="Title" required placeholder="AI regulation analysis" />
+            <AvInput name="subject" label="Subject" placeholder="Policy" />
+            <AvTextarea name="description" label="Description" rows={3} placeholder="Scope and context" />
+            <AvButton type="submit">Create project</AvButton>
+          </form>
+        </AvCard>
 
-              <div class="research-document">
-                <div class="research-document-heading av-auth-stack-xs">
-                  <h1 class="research-document-title" x-text="$store.researchApp.draft.topic || 'Untitled Research Topic'"></h1>
-                  <p class="research-document-subtitle">
-                    Structured notes for clearer thinking, cleaner review, and steadier research progress.
-                  </p>
-                </div>
-
-                <section class="research-document-section">
-                  <div class="research-document-section-header">
-                    <h2>Key Questions</h2>
-                    <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('keyQuestions')">Copy</button>
+        <div class="grid gap-4 lg:grid-cols-2">
+          <AvCard className="av-auth-card">
+            <div class="av-auth-stack-sm">
+              <p class="av-kicker">Projects</p>
+              <h2 class="av-card-heading">Active</h2>
+              {activeProjects.length === 0 ? <p class="av-text-soft">No active projects yet.</p> : null}
+              {activeProjects.map((project) => (
+                <article class="research-item-card">
+                  <div>
+                    <a href={`/app/projects/${project.id}`} class="research-link">{project.title}</a>
+                    <p class="av-text-soft">{project.subject ?? "General"}</p>
                   </div>
-                  <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('keyQuestions')"></p>
-                </section>
+                  <form method="post">
+                    <input type="hidden" name="intent" value="archive-project" />
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <AvButton type="submit" variant="ghost">Archive</AvButton>
+                  </form>
+                </article>
+              ))}
+            </div>
+          </AvCard>
 
-                <section class="research-document-section">
-                  <div class="research-document-section-header">
-                    <h2>Notes / Insights</h2>
-                    <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('notes')">Copy</button>
+          <AvCard variant="soft">
+            <div class="av-auth-stack-sm">
+              <p class="av-kicker">Archived</p>
+              <h2 class="av-card-heading">Project history</h2>
+              {archivedProjects.length === 0 ? <p class="av-text-soft">No archived projects.</p> : null}
+              {archivedProjects.map((project) => (
+                <article class="research-item-card">
+                  <div>
+                    <a href={`/app/projects/${project.id}`} class="research-link">{project.title}</a>
+                    <p class="av-text-soft">Archived</p>
                   </div>
-                  <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('notes')"></p>
-                </section>
-
-                <template x-if="$store.researchApp.draft.showReferences">
-                  <section class="research-document-section">
-                    <div class="research-document-section-header">
-                      <h2>References / Sources</h2>
-                      <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('references')">Copy</button>
-                    </div>
-                    <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('references')"></p>
-                  </section>
-                </template>
-
-                <template x-if="$store.researchApp.draft.showConclusions">
-                  <section class="research-document-section">
-                    <div class="research-document-section-header">
-                      <h2>Conclusions</h2>
-                      <button type="button" class="research-copy-button" x-on:click="$store.researchApp.copySection('conclusions')">Copy</button>
-                    </div>
-                    <p class="research-document-copy" x-text="$store.researchApp.getPreviewValue('conclusions')"></p>
-                  </section>
-                </template>
-              </div>
+                  <form method="post">
+                    <input type="hidden" name="intent" value="restore-project" />
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <AvButton type="submit" variant="ghost">Restore</AvButton>
+                  </form>
+                </article>
+              ))}
             </div>
           </AvCard>
         </div>

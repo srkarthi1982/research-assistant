@@ -193,3 +193,35 @@
     width: 100%;
   }
 }
+
+.research-item-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--av-color-border, #d7dee7) 86%, #e2e8f0 14%);
+  border-radius: 0.85rem;
+  padding: 0.8rem;
+}
+
+.research-note-card {
+  border: 1px solid color-mix(in srgb, var(--av-color-border, #d7dee7) 86%, #e2e8f0 14%);
+  border-radius: 0.9rem;
+  padding: 0.9rem;
+}
+
+.research-note-card-important {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.research-link {
+  color: #0f4c81;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.research-link:hover,
+.research-link:focus-visible {
+  text-decoration: underline;
+}
