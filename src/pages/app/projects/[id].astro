@@ -1,0 +1,190 @@
+---
+import { and, db, desc, eq, sql, ResearchNotes, ResearchProjects } from "astro:db";
+import { AvButton, AvCard, AvContainer, AvInput, AvTextarea } from "@ansiversa/components";
+import AppShell from "../../../layouts/AppShell.astro";
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect("/login");
+
+const id = Astro.params.id ?? "";
+const search = String(Astro.url.searchParams.get("q") ?? "").trim();
+
+const projectRows = await db
+  .select()
+  .from(ResearchProjects)
+  .where(and(eq(ResearchProjects.id, id), eq(ResearchProjects.userId, user.id)))
+  .limit(1);
+
+const project = projectRows[0];
+if (!project) {
+  return new Response("Not found", { status: 404 });
+}
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const intent = String(formData.get("intent") ?? "");
+  const now = new Date();
+
+  if (intent === "create-note") {
+    const title = String(formData.get("title") ?? "").trim();
+    const content = String(formData.get("content") ?? "").trim();
+    const topic = String(formData.get("topic") ?? "").trim();
+    const sourceUrl = String(formData.get("sourceUrl") ?? "").trim();
+    const notes = String(formData.get("notes") ?? "").trim();
+
+    if (title && content) {
+      await db.insert(ResearchNotes).values({
+        id: crypto.randomUUID(),
+        projectId: id,
+        title,
+        content,
+        topic: topic || null,
+        sourceUrl: sourceUrl || null,
+        notes: notes || null,
+        isImportant: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await db.update(ResearchProjects).set({ updatedAt: now }).where(eq(ResearchProjects.id, id));
+    }
+  }
+
+  if (intent === "delete-note") {
+    const noteId = String(formData.get("noteId") ?? "");
+    await db.delete(ResearchNotes).where(and(eq(ResearchNotes.id, noteId), eq(ResearchNotes.projectId, id)));
+    await db.update(ResearchProjects).set({ updatedAt: now }).where(eq(ResearchProjects.id, id));
+  }
+
+  if (intent === "toggle-important") {
+    const noteId = String(formData.get("noteId") ?? "");
+    const isImportant = String(formData.get("isImportant") ?? "") === "true";
+    await db
+      .update(ResearchNotes)
+      .set({ isImportant: !isImportant, updatedAt: now })
+      .where(and(eq(ResearchNotes.id, noteId), eq(ResearchNotes.projectId, id)));
+    await db.update(ResearchProjects).set({ updatedAt: now }).where(eq(ResearchProjects.id, id));
+  }
+
+  if (intent === "update-note") {
+    const noteId = String(formData.get("noteId") ?? "");
+    const title = String(formData.get("title") ?? "").trim();
+    const content = String(formData.get("content") ?? "").trim();
+    const topic = String(formData.get("topic") ?? "").trim();
+    const sourceUrl = String(formData.get("sourceUrl") ?? "").trim();
+    const notes = String(formData.get("notes") ?? "").trim();
+
+    await db
+      .update(ResearchNotes)
+      .set({ title, content, topic: topic || null, sourceUrl: sourceUrl || null, notes: notes || null, updatedAt: now })
+      .where(and(eq(ResearchNotes.id, noteId), eq(ResearchNotes.projectId, id)));
+    await db.update(ResearchProjects).set({ updatedAt: now }).where(eq(ResearchProjects.id, id));
+  }
+
+  return Astro.redirect(`/app/projects/${id}`);
+}
+
+const whereClause = search
+  ? and(
+      eq(ResearchNotes.projectId, id),
+      sql`(${ResearchNotes.title} LIKE ${`%${search}%`} OR ${ResearchNotes.content} LIKE ${`%${search}%`} OR ${ResearchNotes.topic} LIKE ${`%${search}%`})`,
+    )
+  : eq(ResearchNotes.projectId, id);
+
+const notes = await db
+  .select()
+  .from(ResearchNotes)
+  .where(whereClause)
+  .orderBy(desc(ResearchNotes.isImportant), desc(ResearchNotes.updatedAt));
+
+const grouped = new Map<string, typeof notes>();
+for (const note of notes) {
+  const key = note.topic?.trim() || "General";
+  const bucket = grouped.get(key) ?? [];
+  bucket.push(note);
+  grouped.set(key, bucket);
+}
+---
+
+<AppShell title={`${project.title} | Research Project`} description={project.description ?? "Project detail"}>
+  <section class="av-section">
+    <AvContainer>
+      <div class="av-auth-stack-lg">
+        <AvCard className="av-auth-card">
+          <div class="av-auth-stack-sm">
+            <p class="av-kicker">Project</p>
+            <h1 class="av-section-title">{project.title}</h1>
+            <p class="av-text-soft">{project.description ?? "No description"}</p>
+            <p class="av-text-soft">Status: {project.status}</p>
+            <a href="/app" class="research-link">← Back to workspace</a>
+          </div>
+        </AvCard>
+
+        <AvCard className="av-auth-card">
+          <form method="get" class="av-row-wrap">
+            <AvInput name="q" label="Search notes" value={search} placeholder="Search title, content, topic" />
+            <AvButton type="submit">Filter</AvButton>
+          </form>
+        </AvCard>
+
+        <AvCard className="av-auth-card">
+          <form method="post" class="av-auth-stack-sm">
+            <input type="hidden" name="intent" value="create-note" />
+            <p class="av-kicker">Add note</p>
+            <AvInput name="title" label="Title" required />
+            <AvTextarea name="content" label="Content" rows={4} required />
+            <AvInput name="topic" label="Topic / section" placeholder="Methodology" />
+            <AvInput name="sourceUrl" label="Source URL" placeholder="https://..." />
+            <AvTextarea name="notes" label="Reference notes" rows={2} />
+            <AvButton type="submit">Save note</AvButton>
+          </form>
+        </AvCard>
+
+        {[...grouped.entries()].map(([topic, topicNotes]) => (
+          <AvCard className="av-auth-card">
+            <div class="av-auth-stack-sm">
+              <h2 class="av-card-heading">{topic}</h2>
+              {topicNotes.map((note) => (
+                <article class:list={["research-note-card", note.isImportant && "research-note-card-important"]}>
+                  <div class="av-auth-stack-xs">
+                    <h3>{note.title}</h3>
+                    <p>{note.content}</p>
+                    {note.sourceUrl ? <a class="research-link" href={note.sourceUrl} target="_blank">{note.sourceUrl}</a> : null}
+                    {note.notes ? <p class="av-text-soft">{note.notes}</p> : null}
+                  </div>
+
+                  <details>
+                    <summary>Edit note</summary>
+                    <form method="post" class="av-auth-stack-xs">
+                      <input type="hidden" name="intent" value="update-note" />
+                      <input type="hidden" name="noteId" value={note.id} />
+                      <AvInput name="title" label="Title" value={note.title} required />
+                      <AvTextarea name="content" label="Content" rows={3} required>{note.content}</AvTextarea>
+                      <AvInput name="topic" label="Topic" value={note.topic ?? ""} />
+                      <AvInput name="sourceUrl" label="Source URL" value={note.sourceUrl ?? ""} />
+                      <AvTextarea name="notes" label="Notes" rows={2}>{note.notes ?? ""}</AvTextarea>
+                      <AvButton type="submit">Update</AvButton>
+                    </form>
+                  </details>
+
+                  <div class="av-row-wrap">
+                    <form method="post">
+                      <input type="hidden" name="intent" value="toggle-important" />
+                      <input type="hidden" name="noteId" value={note.id} />
+                      <input type="hidden" name="isImportant" value={note.isImportant ? "true" : "false"} />
+                      <AvButton type="submit" variant="ghost">{note.isImportant ? "Unmark important" : "Mark important"}</AvButton>
+                    </form>
+                    <form method="post">
+                      <input type="hidden" name="intent" value="delete-note" />
+                      <input type="hidden" name="noteId" value={note.id} />
+                      <AvButton type="submit" variant="ghost">Delete</AvButton>
+                    </form>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </AvCard>
+        ))}
+      </div>
+    </AvContainer>
+  </section>
+</AppShell>
